@@ -5,7 +5,8 @@ import usersRouter from './routes/users';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect('mongodb://localhost:27017/mestodb')
+mongoose
+  .connect('mongodb://localhost:27017/mestodb')
   .then(() => console.log('Успешно подключились к базе данных'))
   .catch((error) => console.error('Ошибка подключения к базе данных:', error));
 
