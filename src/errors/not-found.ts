@@ -1,8 +1,11 @@
+import MESSAGES from '../utils/messages';
+import STATUS_CODES from '../utils/status-codes';
+
 export default class NotFound extends Error {
   statusCode: number;
 
-  constructor(message = 'Ресурс не найден') {
+  constructor(message: string = MESSAGES.DEFAULT_ERROR.NOT_FOUND) {
     super(message);
-    this.statusCode = 404;
+    this.statusCode = STATUS_CODES.CLIENT_ERROR.NOT_FOUND;
   }
 }

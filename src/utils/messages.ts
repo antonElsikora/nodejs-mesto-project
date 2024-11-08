@@ -1,4 +1,8 @@
 const MESSAGES = {
+  DEFAULT_ERROR: {
+    INCORRECT_REQUEST: 'Некорректный запрос',
+    NOT_FOUND: 'Ресурс не найден',
+  },
   CARD: {
     NOT_FOUND: 'Карточка с указанным _id не найдена.',
     INVALID_ID: 'Переданы некорректные данные для постановки/снятия лайка.',
