@@ -3,6 +3,8 @@ import User, { IUser } from '../models/user';
 import { RequestWithUser } from './cards';
 import NotFoundError from '../errors/NotFoundError';
 import BadRequestError from '../errors/BadRequestError';
+import STATUS_CODES from '../utils/statusCodes';
+import MESSAGES from '../utils/messages';
 
 export const updateUser = async (
   req: Request,
@@ -20,17 +22,13 @@ export const updateUser = async (
     );
 
     if (user) {
-      res.status(200).send(user);
+      res.status(STATUS_CODES.SUCCESS.OK).send(user);
     } else {
-      next(new NotFoundError('Пользователь с указанным _id не найден.'));
+      next(new NotFoundError(MESSAGES.USER.NOT_FOUND));
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
-      next(
-        new BadRequestError(
-          'Переданы некорректные данные при обновлении профиля.',
-        ),
-      );
+      next(new BadRequestError(MESSAGES.USER.INVALID_UPDATE));
     } else {
       next(err);
     }
@@ -47,7 +45,7 @@ export const updateAvatar = async (
 
   try {
     if (!avatar) {
-      next(new BadRequestError('Поле "avatar" обязательно.'));
+      next(new BadRequestError(MESSAGES.USER.AVATAR_REQUIRED));
     } else {
       const user: IUser | null = await User.findByIdAndUpdate(
         userId,
@@ -55,18 +53,14 @@ export const updateAvatar = async (
         { new: true, runValidators: true },
       );
       if (user) {
-        res.status(200).send(user);
+        res.status(STATUS_CODES.SUCCESS.OK).send(user);
       } else {
-        next(new NotFoundError('Пользователь с указанным _id не найден.'));
+        next(new NotFoundError(MESSAGES.USER.NOT_FOUND));
       }
     }
   } catch (err: any) {
     if (err.name === 'ValidationError') {
-      next(
-        new BadRequestError(
-          'Переданы некорректные данные при обновлении аватара.',
-        ),
-      );
+      next(new BadRequestError(MESSAGES.USER.INVALID_AVATAR));
     } else {
       next(err);
     }
@@ -80,7 +74,7 @@ export const getUsers = async (
 ): Promise<void> => {
   try {
     const users: IUser[] = await User.find({});
-    res.status(200).send(users);
+    res.status(STATUS_CODES.SUCCESS.OK).send(users);
   } catch (err) {
     next(err);
   }
@@ -94,15 +88,13 @@ export const getUserById = async (
   try {
     const user: IUser | null = await User.findById(req.params.userId);
     if (user) {
-      res.status(200).send(user);
+      res.status(STATUS_CODES.SUCCESS.OK).send(user);
     } else {
-      next(new NotFoundError('Пользователь с указанным _id не найден.'));
+      next(new NotFoundError(MESSAGES.USER.NOT_FOUND));
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'CastError') {
-      next(
-        new BadRequestError('Некорректный формат идентификатора пользователя'),
-      );
+      next(new BadRequestError(MESSAGES.USER.INVALID_ID));
     } else {
       next(err);
     }
@@ -118,14 +110,10 @@ export const createUser = async (
 
   try {
     const user: IUser = await User.create({ name, about, avatar });
-    res.status(201).send(user);
+    res.status(STATUS_CODES.SUCCESS.CREATED).send(user);
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
-      next(
-        new BadRequestError(
-          'Переданы некорректные данные при создании пользователя',
-        ),
-      );
+      next(new BadRequestError(MESSAGES.USER.INVALID_CREATE));
     } else {
       next(err);
     }
