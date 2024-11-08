@@ -4,11 +4,15 @@ import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 import { RequestWithUser } from './controllers/cards';
 import errorHandler from './middlewares/error-handler';
+import loadEnv from './utils/env-loader';
+
+loadEnv();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const MONGO_URI = process.env.MONGO_URI as string;
 
-mongoose.connect('mongodb://localhost:27017/mestodb').catch(() => {});
+mongoose.connect(MONGO_URI).catch(() => {});
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   (req as RequestWithUser).user = {
