@@ -19,7 +19,16 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     minlength: 2,
     maxlength: 200,
   },
-  avatar: { type: String, required: true },
+  avatar: {
+    type: String,
+    required: true,
+    validate: {
+      validator(url: string) {
+        const urlRegex = /^(https?:\/\/\S+)$/i;
+        return urlRegex.test(url);
+      },
+    },
+  },
 });
 
 export default mongoose.model<IUser>('user', userSchema);

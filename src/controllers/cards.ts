@@ -1,5 +1,8 @@
-import { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import { Request, Response, NextFunction } from 'express';
 import Card, { ICard } from '../models/card';
+import NotFoundError from '../errors/NotFoundError';
+import BadRequestError from '../errors/BadRequestError';
 
 export interface RequestWithUser extends Request {
   user: {
@@ -7,18 +10,24 @@ export interface RequestWithUser extends Request {
   };
 }
 
-export const getCards = async (req: Request, res: Response) => {
+export const getCards = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const cards: ICard[] = await Card.find({}).populate(['owner', 'likes']);
     res.status(200).send(cards);
   } catch (err) {
-    res
-      .status(500)
-      .send({ message: 'Произошла ошибка при получении карточек' });
+    next(err);
   }
 };
 
-export const createCard = async (req: Request, res: Response) => {
+export const createCard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const { name, link } = req.body;
   const userId = (req as RequestWithUser).user._id;
 
@@ -26,69 +35,95 @@ export const createCard = async (req: Request, res: Response) => {
     const card: ICard = await Card.create({ name, link, owner: userId });
     res.status(201).send(card);
   } catch (err) {
-    res
-      .status(400)
-      .send({ message: 'Переданы некорректные данные при создании карточки' });
+    if (err instanceof Error && err.name === 'ValidationError') {
+      next(
+        new BadRequestError(
+          'Переданы некорректные данные при создании карточки',
+        ),
+      );
+    } else {
+      next(err);
+    }
   }
 };
 
 export const deleteCard = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const card: ICard | null = await Card.findByIdAndDelete(req.params.cardId);
 
-    if (!card) {
-      res.status(404).send({ message: 'Карточка не найдена' });
-      return;
+    if (card) {
+      res.status(200).send({ message: 'Карточка удалена' });
+    } else {
+      next(new NotFoundError('Карточка с указанным _id не найдена.'));
     }
-
-    res.status(200).send({ message: 'Карточка удалена' });
   } catch (err) {
-    res.status(400).send({ message: 'Некорректный _id карточки' });
+    next(err);
   }
 };
 
-export const likeCard = async (req: Request, res: Response): Promise<void> => {
+export const likeCard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
-    const userId = (req as RequestWithUser).user._id;
-    const card: ICard | null = await Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $addToSet: { likes: userId } },
-      { new: true },
-    ).populate(['owner', 'likes']);
+    const { cardId } = req.params;
+    if (!mongoose.isValidObjectId(cardId)) {
+      next(
+        new BadRequestError(
+          'Переданы некорректные данные для постановки/снятии лайка.',
+        ),
+      );
+    } else {
+      const userId = (req as RequestWithUser).user._id;
+      const card: ICard | null = await Card.findByIdAndUpdate(
+        req.params.cardId,
+        { $addToSet: { likes: userId } },
+        { new: true, runValidators: true },
+      ).populate(['owner', 'likes']);
 
-    if (!card) {
-      res.status(404).send({ message: 'Карточка не найдена' });
-      return;
+      if (card) {
+        res.status(200).send(card);
+      } else {
+        next(new NotFoundError('Передан несуществующий _id карточки.'));
+      }
     }
-
-    res.status(200).send(card);
   } catch (err) {
-    res.status(400).send({ message: 'Некорректный _id карточки' });
+    next(err);
   }
 };
 
 export const dislikeCard = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const userId = (req as RequestWithUser).user._id;
-    const card: ICard | null = await Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $pull: { likes: userId } },
-      { new: true },
-    ).populate(['owner', 'likes']);
-
-    if (!card) {
-      res.status(404).send({ message: 'Карточка не найдена' });
-      return;
+    const { cardId } = req.params;
+    if (!mongoose.isValidObjectId(cardId)) {
+      next(
+        new BadRequestError(
+          'Переданы некорректные данные для постановки/снятии лайка.',
+        ),
+      );
+    } else {
+      const userId = (req as RequestWithUser).user._id;
+      const card: ICard | null = await Card.findByIdAndUpdate(
+        req.params.cardId,
+        { $pull: { likes: userId } },
+        { new: true },
+      ).populate(['owner', 'likes']);
+      if (card) {
+        res.status(200).send(card);
+      } else {
+        next(new NotFoundError('Передан несуществующий _id карточки.'));
+      }
     }
-
-    res.status(200).send(card);
   } catch (err) {
-    res.status(400).send({ message: 'Некорректный _id карточки' });
+    next(err);
   }
 };
