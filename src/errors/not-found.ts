@@ -1,4 +1,4 @@
-export default class NotFoundError extends Error {
+export default class NotFound extends Error {
   statusCode: number;
 
   constructor(message = 'Ресурс не найден') {

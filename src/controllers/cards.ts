@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import Card, { ICard } from '../models/card';
-import NotFoundError from '../errors/NotFoundError';
-import BadRequestError from '../errors/BadRequestError';
-import STATUS_CODES from '../utils/statusCodes';
+import NotFound from '../errors/not-found';
+import BadRequest from '../errors/bad-request';
+import STATUS_CODES from '../utils/status-codes';
 import MESSAGES from '../utils/messages';
 
 export interface RequestWithUser extends Request {
@@ -38,7 +38,7 @@ export const createCard = async (
     res.status(STATUS_CODES.SUCCESS.CREATED).send(card);
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
-      next(new BadRequestError(MESSAGES.CARD.INVALID_CREATE));
+      next(new BadRequest(MESSAGES.CARD.INVALID_CREATE));
     } else {
       next(err);
     }
@@ -56,7 +56,7 @@ export const deleteCard = async (
     if (card) {
       res.status(STATUS_CODES.SUCCESS.OK).send(MESSAGES.CARD.DELETED);
     } else {
-      next(new NotFoundError(MESSAGES.CARD.NOT_FOUND));
+      next(new NotFound(MESSAGES.CARD.NOT_FOUND));
     }
   } catch (err) {
     next(err);
@@ -71,7 +71,7 @@ export const likeCard = async (
   try {
     const { cardId } = req.params;
     if (!mongoose.isValidObjectId(cardId)) {
-      next(new BadRequestError(MESSAGES.CARD.INVALID_ID));
+      next(new BadRequest(MESSAGES.CARD.INVALID_ID));
     } else {
       const userId = (req as RequestWithUser).user._id;
       const card: ICard | null = await Card.findByIdAndUpdate(
@@ -83,7 +83,7 @@ export const likeCard = async (
       if (card) {
         res.status(STATUS_CODES.SUCCESS.OK).send(card);
       } else {
-        next(new NotFoundError(MESSAGES.CARD.NOT_FOUND));
+        next(new NotFound(MESSAGES.CARD.NOT_FOUND));
       }
     }
   } catch (err) {
@@ -99,7 +99,7 @@ export const dislikeCard = async (
   try {
     const { cardId } = req.params;
     if (!mongoose.isValidObjectId(cardId)) {
-      next(new BadRequestError(MESSAGES.CARD.INVALID_ID));
+      next(new BadRequest(MESSAGES.CARD.INVALID_ID));
     } else {
       const userId = (req as RequestWithUser).user._id;
       const card: ICard | null = await Card.findByIdAndUpdate(
@@ -110,7 +110,7 @@ export const dislikeCard = async (
       if (card) {
         res.status(STATUS_CODES.SUCCESS.OK).send(card);
       } else {
-        next(new NotFoundError(MESSAGES.CARD.NOT_FOUND));
+        next(new NotFound(MESSAGES.CARD.NOT_FOUND));
       }
     }
   } catch (err) {

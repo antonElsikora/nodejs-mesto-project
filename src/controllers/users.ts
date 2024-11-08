@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import User, { IUser } from '../models/user';
 import { RequestWithUser } from './cards';
-import NotFoundError from '../errors/NotFoundError';
-import BadRequestError from '../errors/BadRequestError';
-import STATUS_CODES from '../utils/statusCodes';
+import NotFound from '../errors/not-found';
+import BadRequest from '../errors/bad-request';
+import STATUS_CODES from '../utils/status-codes';
 import MESSAGES from '../utils/messages';
 
 export const updateUser = async (
@@ -24,11 +24,11 @@ export const updateUser = async (
     if (user) {
       res.status(STATUS_CODES.SUCCESS.OK).send(user);
     } else {
-      next(new NotFoundError(MESSAGES.USER.NOT_FOUND));
+      next(new NotFound(MESSAGES.USER.NOT_FOUND));
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
-      next(new BadRequestError(MESSAGES.USER.INVALID_UPDATE));
+      next(new BadRequest(MESSAGES.USER.INVALID_UPDATE));
     } else {
       next(err);
     }
@@ -45,7 +45,7 @@ export const updateAvatar = async (
 
   try {
     if (!avatar) {
-      next(new BadRequestError(MESSAGES.USER.AVATAR_REQUIRED));
+      next(new BadRequest(MESSAGES.USER.AVATAR_REQUIRED));
     } else {
       const user: IUser | null = await User.findByIdAndUpdate(
         userId,
@@ -55,12 +55,12 @@ export const updateAvatar = async (
       if (user) {
         res.status(STATUS_CODES.SUCCESS.OK).send(user);
       } else {
-        next(new NotFoundError(MESSAGES.USER.NOT_FOUND));
+        next(new NotFound(MESSAGES.USER.NOT_FOUND));
       }
     }
   } catch (err: any) {
     if (err.name === 'ValidationError') {
-      next(new BadRequestError(MESSAGES.USER.INVALID_AVATAR));
+      next(new BadRequest(MESSAGES.USER.INVALID_AVATAR));
     } else {
       next(err);
     }
@@ -90,11 +90,11 @@ export const getUserById = async (
     if (user) {
       res.status(STATUS_CODES.SUCCESS.OK).send(user);
     } else {
-      next(new NotFoundError(MESSAGES.USER.NOT_FOUND));
+      next(new NotFound(MESSAGES.USER.NOT_FOUND));
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'CastError') {
-      next(new BadRequestError(MESSAGES.USER.INVALID_ID));
+      next(new BadRequest(MESSAGES.USER.INVALID_ID));
     } else {
       next(err);
     }
@@ -113,7 +113,7 @@ export const createUser = async (
     res.status(STATUS_CODES.SUCCESS.CREATED).send(user);
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
-      next(new BadRequestError(MESSAGES.USER.INVALID_CREATE));
+      next(new BadRequest(MESSAGES.USER.INVALID_CREATE));
     } else {
       next(err);
     }

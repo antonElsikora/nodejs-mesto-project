@@ -1,4 +1,4 @@
-export default class BadRequestError extends Error {
+export default class BadRequest extends Error {
   statusCode: number;
 
   constructor(message = 'Некорректный запрос') {

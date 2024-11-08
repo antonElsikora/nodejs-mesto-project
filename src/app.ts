@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 import { RequestWithUser } from './controllers/cards';
-import errorHandler from './middlewares/errorHandler';
+import errorHandler from './middlewares/error-handler';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

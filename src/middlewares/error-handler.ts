@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import STATUS_CODES from '../utils/statusCodes';
+import STATUS_CODES from '../utils/status-codes';
 import MESSAGES from '../utils/messages';
 
 interface ICustomError extends Error {
