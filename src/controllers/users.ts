@@ -117,21 +117,25 @@ export const createUser = async (
   const { name, about, avatar, email, password } = req.body;
 
   try {
-    const hash = await bcrypt.hash(password, 10);
-    const user: IUser = await User.create({
-      name,
-      about,
-      avatar,
-      email,
-      password: hash,
-    });
-    res.status(STATUS_CODES.SUCCESS.CREATED).send({
-      name: user.name,
-      about: user.about,
-      avatar: user.avatar,
-      email: user.email,
-      _id: user._id,
-    });
+    if (!email || !password) {
+      next(new BadRequest(MESSAGES.USER.REQUIRED_CREDENTIALS));
+    } else {
+      const hash = await bcrypt.hash(password, 10);
+      const user: IUser = await User.create({
+        name,
+        about,
+        avatar,
+        email,
+        password: hash,
+      });
+      res.status(STATUS_CODES.SUCCESS.CREATED).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
+    }
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
       next(new BadRequest(MESSAGES.USER.INVALID_CREATE));
@@ -151,24 +155,28 @@ export const login = async (
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
+    if (!email || !password) {
+      next(new BadRequest(MESSAGES.USER.REQUIRED_CREDENTIALS));
     } else {
-      const matched = await bcrypt.compare(password, user.password);
-      if (!matched) {
+      const user = await User.findOne({ email }).select('+password');
+      if (!user) {
         next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
       } else {
-        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-          expiresIn: '7d',
-        });
-        res
-          .cookie('jwt', token, {
-            httpOnly: true,
-            sameSite: true,
-          })
-          .status(STATUS_CODES.SUCCESS.OK)
-          .send({ message: MESSAGES.USER.LOGIN_SUCCESS });
+        const matched = await bcrypt.compare(password, user.password);
+        if (!matched) {
+          next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
+        } else {
+          const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+            expiresIn: '7d',
+          });
+          res
+            .cookie('jwt', token, {
+              httpOnly: true,
+              sameSite: true,
+            })
+            .status(STATUS_CODES.SUCCESS.OK)
+            .send({ message: MESSAGES.USER.LOGIN_SUCCESS });
+        }
       }
     }
   } catch (err) {

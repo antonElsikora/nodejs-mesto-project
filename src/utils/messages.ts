@@ -19,6 +19,7 @@ const MESSAGES = {
     EMAIL_EXISTS: 'Пользователь с таким email уже существует',
     INVALID_CREDENTIALS: 'Неверный email или пароль',
     LOGIN_SUCCESS: 'Успешная авторизация',
+    REQUIRED_CREDENTIALS: 'Недостаточно данных. Требуется email и password',
   },
   SYSTEM: {
     SERVER_ERROR: 'На сервере произошла ошибка.',

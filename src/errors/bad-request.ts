@@ -6,6 +6,6 @@ export default class BadRequest extends Error {
 
   constructor(message: string = MESSAGES.DEFAULT_ERROR.INCORRECT_REQUEST) {
     super(message);
-    this.statusCode = STATUS_CODES.CLIENT_ERROR.NOT_FOUND;
+    this.statusCode = STATUS_CODES.CLIENT_ERROR.BAD_REQUEST;
   }
 }
