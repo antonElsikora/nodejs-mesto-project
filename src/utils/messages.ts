@@ -16,6 +16,9 @@ const MESSAGES = {
     INVALID_AVATAR: 'Переданы некорректные данные при обновлении аватара.',
     AVATAR_REQUIRED: 'Поле "avatar" обязательно.',
     INVALID_CREATE: 'Переданы некорректные данные при создании пользователя.',
+    EMAIL_EXISTS: 'Пользователь с таким email уже существует',
+    INVALID_CREDENTIALS: 'Неверный email или пароль',
+    LOGIN_SUCCESS: 'Успешная авторизация',
   },
   SYSTEM: {
     SERVER_ERROR: 'На сервере произошла ошибка.',

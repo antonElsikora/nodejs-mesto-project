@@ -50,6 +50,14 @@
       {
         "allow": ["_id"]
       }
+    ],
+    "object-curly-newline": [
+      "error",
+      {
+        "ObjectPattern": { "multiline": true, "consistent": true },
+        "ObjectExpression": { "multiline": true, "consistent": true },
+        "ImportDeclaration": { "multiline": true, "consistent": true }
+      }
     ]
   }
 }

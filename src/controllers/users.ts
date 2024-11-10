@@ -1,10 +1,18 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import User, { IUser } from '../models/user';
 import { RequestWithUser } from './cards';
 import NotFound from '../errors/not-found';
 import BadRequest from '../errors/bad-request';
+import ConflictError from '../errors/conflict';
+import UnauthorizedError from '../errors/unauthorized';
 import STATUS_CODES from '../utils/status-codes';
 import MESSAGES from '../utils/messages';
+
+import { ICustomError } from '../middlewares/error-handler';
+
+const { JWT_SECRET = 'some-secret-key' } = process.env;
 
 export const updateUser = async (
   req: Request,
@@ -106,16 +114,64 @@ export const createUser = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  const { name, about, avatar } = req.body;
+  const { name, about, avatar, email, password } = req.body;
 
   try {
-    const user: IUser = await User.create({ name, about, avatar });
-    res.status(STATUS_CODES.SUCCESS.CREATED).send(user);
+    const hash = await bcrypt.hash(password, 10);
+    const user: IUser = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    });
+    res.status(STATUS_CODES.SUCCESS.CREATED).send({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+      _id: user._id,
+    });
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
       next(new BadRequest(MESSAGES.USER.INVALID_CREATE));
+    } else if ((err as ICustomError).code === 11000) {
+      next(new ConflictError(MESSAGES.USER.EMAIL_EXISTS));
     } else {
       next(err);
     }
+  }
+};
+
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
+    } else {
+      const matched = await bcrypt.compare(password, user.password);
+      if (!matched) {
+        next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
+      } else {
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: '7d',
+        });
+        res
+          .cookie('jwt', token, {
+            httpOnly: true,
+            sameSite: true,
+          })
+          .status(STATUS_CODES.SUCCESS.OK)
+          .send({ message: MESSAGES.USER.LOGIN_SUCCESS });
+      }
+    }
+  } catch (err) {
+    next(err);
   }
 };

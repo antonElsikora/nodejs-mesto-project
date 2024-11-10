@@ -5,6 +5,7 @@ import cardsRouter from './routes/cards';
 import { RequestWithUser } from './controllers/cards';
 import errorHandler from './middlewares/error-handler';
 import loadEnv from './utils/env-loader';
+import { login, createUser } from './controllers/users';
 
 loadEnv();
 
@@ -20,6 +21,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   };
   next();
 });
+
+app.post('/signin', login);
+app.post('/signup', createUser);
 
 app.use(express.json());
 app.use('/', usersRouter);
