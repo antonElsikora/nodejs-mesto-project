@@ -183,3 +183,21 @@ export const login = async (
     next(err);
   }
 };
+
+export const getCurrentUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const userId = (req as RequestWithUser).user._id;
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      res.status(STATUS_CODES.SUCCESS.OK).send(user);
+    } else {
+      next(new NotFound(MESSAGES.USER.NOT_FOUND));
+    }
+  } catch (err) {
+    next(err);
+  }
+};

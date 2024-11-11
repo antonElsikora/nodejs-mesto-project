@@ -20,8 +20,10 @@ const MESSAGES = {
     INVALID_CREDENTIALS: 'Неверный email или пароль',
     LOGIN_SUCCESS: 'Успешная авторизация',
     REQUIRED_CREDENTIALS: 'Недостаточно данных. Требуется email и password',
+    NEED_LOGIN: 'Необходима авторизация',
   },
   SYSTEM: {
+    INCORRECT_TOKEN: 'Некорректный токен',
     SERVER_ERROR: 'На сервере произошла ошибка.',
   },
 } as const;
