@@ -66,8 +66,8 @@ export const updateAvatar = async (
         next(new NotFound(MESSAGES.USER.NOT_FOUND));
       }
     }
-  } catch (err: any) {
-    if (err.name === 'ValidationError') {
+  } catch (err) {
+    if (err instanceof Error && err.name === 'ValidationError') {
       next(new BadRequest(MESSAGES.USER.INVALID_AVATAR));
     } else {
       next(err);

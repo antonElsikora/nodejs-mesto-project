@@ -28,8 +28,13 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
       'https://www.ferra.ru/imgs/2024/05/08/05/6460496/c2150453d059e8999c5f0b211ce334f7c869147c.jpg',
     validate: {
       validator(url: string) {
-        const urlRegex = /^(https?:\/\/\S+)$/i;
-        return urlRegex.test(url);
+        return validator.isURL(url, {
+          protocols: ['http', 'https'],
+          require_protocol: true,
+          require_valid_protocol: true,
+          require_host: true,
+          require_tld: true,
+        });
       },
     },
   },

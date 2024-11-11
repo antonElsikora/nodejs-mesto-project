@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import validator from 'validator';
 
 export interface ICard extends Document {
   name: string;
@@ -18,6 +19,17 @@ const cardSchema: Schema<ICard> = new Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator(url: string) {
+        return validator.isURL(url, {
+          protocols: ['http', 'https'],
+          require_protocol: true,
+          require_valid_protocol: true,
+          require_host: true,
+          require_tld: true,
+        });
+      },
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

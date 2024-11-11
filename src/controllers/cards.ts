@@ -19,8 +19,12 @@ export const getCards = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const cards: ICard[] = await Card.find({}).populate(['owner', 'likes']);
-    res.status(STATUS_CODES.SUCCESS.OK).send(cards);
+    const cards: ICard[] = await Card.find({});
+    if (cards.length === 0) {
+      res.status(STATUS_CODES.SUCCESS.OK).send(MESSAGES.CARD.NO_CARDS);
+    } else {
+      res.status(STATUS_CODES.SUCCESS.OK).send(cards);
+    }
   } catch (err) {
     next(err);
   }
@@ -35,8 +39,12 @@ export const createCard = async (
   const userId = (req as RequestWithUser).user._id;
 
   try {
-    const card: ICard = await Card.create({ name, link, owner: userId });
-    res.status(STATUS_CODES.SUCCESS.CREATED).send(card);
+    if (!name || !link) {
+      next(new BadRequest(MESSAGES.CARD.NAME_LINK_REQUIRED));
+    } else {
+      const card: ICard = await Card.create({ name, link, owner: userId });
+      res.status(STATUS_CODES.SUCCESS.CREATED).send(card);
+    }
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
       next(new BadRequest(MESSAGES.CARD.INVALID_CREATE));
@@ -52,17 +60,17 @@ export const deleteCard = async (
   next: NextFunction,
 ): Promise<void> => {
   const userId = (req as RequestWithUser).user._id;
-  try {
-    const card: ICard | null = await Card.findByIdAndDelete(req.params.cardId);
 
-    if (card) {
-      if (card.owner.toString() !== userId) {
-        next(new Forbidden(MESSAGES.USER.NOT_ALLOW));
-      } else {
-        res.status(STATUS_CODES.SUCCESS.OK).send(MESSAGES.CARD.DELETED);
-      }
-    } else {
+  try {
+    const card: ICard | null = await Card.findById(req.params.cardId);
+
+    if (!card) {
       next(new NotFound(MESSAGES.CARD.NOT_FOUND));
+    } else if (card.owner.toString() !== userId) {
+      next(new Forbidden(MESSAGES.USER.NOT_ALLOW));
+    } else {
+      await card.deleteOne();
+      res.status(STATUS_CODES.SUCCESS.OK).send(MESSAGES.CARD.DELETED);
     }
   } catch (err) {
     next(err);
@@ -84,7 +92,7 @@ export const likeCard = async (
         req.params.cardId,
         { $addToSet: { likes: userId } },
         { new: true, runValidators: true },
-      ).populate(['owner', 'likes']);
+      );
 
       if (card) {
         res.status(STATUS_CODES.SUCCESS.OK).send(card);
@@ -112,7 +120,7 @@ export const dislikeCard = async (
         req.params.cardId,
         { $pull: { likes: userId } },
         { new: true },
-      ).populate(['owner', 'likes']);
+      );
       if (card) {
         res.status(STATUS_CODES.SUCCESS.OK).send(card);
       } else {
