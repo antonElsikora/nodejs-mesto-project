@@ -8,6 +8,7 @@ import loadEnv from './utils/env-loader';
 import { login, createUser } from './controllers/users';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
+import notFound from './middlewares/notFound';
 
 loadEnv();
 
@@ -28,6 +29,7 @@ app.use(auth);
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
 
+app.use(notFound);
 app.use(errorLogger);
 app.use(errorHandler);
 
