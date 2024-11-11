@@ -13,7 +13,7 @@ loadEnv();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const MONGO_URI = process.env.MONGO_URI as string;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mestodb';
 
 mongoose.connect(MONGO_URI).catch(() => {});
 
