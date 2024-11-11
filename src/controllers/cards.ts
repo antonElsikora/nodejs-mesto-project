@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import Card, { ICard } from '../models/card';
 import NotFound from '../errors/not-found';
 import BadRequest from '../errors/bad-request';
+import Forbidden from '../errors/forbidden';
 import STATUS_CODES from '../utils/status-codes';
 import MESSAGES from '../utils/messages';
 
@@ -50,11 +51,16 @@ export const deleteCard = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
+  const userId = (req as RequestWithUser).user._id;
   try {
     const card: ICard | null = await Card.findByIdAndDelete(req.params.cardId);
 
     if (card) {
-      res.status(STATUS_CODES.SUCCESS.OK).send(MESSAGES.CARD.DELETED);
+      if (card.owner.toString() !== userId) {
+        next(new Forbidden(MESSAGES.USER.NOT_ALLOW));
+      } else {
+        res.status(STATUS_CODES.SUCCESS.OK).send(MESSAGES.CARD.DELETED);
+      }
     } else {
       next(new NotFound(MESSAGES.CARD.NOT_FOUND));
     }

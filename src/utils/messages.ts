@@ -21,6 +21,7 @@ const MESSAGES = {
     LOGIN_SUCCESS: 'Успешная авторизация',
     REQUIRED_CREDENTIALS: 'Недостаточно данных. Требуется email и password',
     NEED_LOGIN: 'Необходима авторизация',
+    NOT_ALLOW: 'Нет доступа',
   },
   SYSTEM: {
     INCORRECT_TOKEN: 'Некорректный токен',
