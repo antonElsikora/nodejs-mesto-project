@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import Card, { ICard } from '../models/card';
 import NotFound from '../errors/not-found';
@@ -39,12 +38,8 @@ export const createCard = async (
   const userId = (req as RequestWithUser).user._id;
 
   try {
-    if (!name || !link) {
-      next(new BadRequest(MESSAGES.CARD.NAME_LINK_REQUIRED));
-    } else {
-      const card: ICard = await Card.create({ name, link, owner: userId });
-      res.status(STATUS_CODES.SUCCESS.CREATED).send(card);
-    }
+    const card: ICard = await Card.create({ name, link, owner: userId });
+    res.status(STATUS_CODES.SUCCESS.CREATED).send(card);
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
       next(new BadRequest(MESSAGES.CARD.INVALID_CREATE));
@@ -84,21 +79,17 @@ export const likeCard = async (
 ): Promise<void> => {
   try {
     const { cardId } = req.params;
-    if (!mongoose.isValidObjectId(cardId)) {
-      next(new BadRequest(MESSAGES.CARD.INVALID_ID));
-    } else {
-      const userId = (req as RequestWithUser).user._id;
-      const card: ICard | null = await Card.findByIdAndUpdate(
-        req.params.cardId,
-        { $addToSet: { likes: userId } },
-        { new: true, runValidators: true },
-      );
+    const userId = (req as RequestWithUser).user._id;
+    const card: ICard | null = await Card.findByIdAndUpdate(
+      cardId,
+      { $addToSet: { likes: userId } },
+      { new: true, runValidators: true },
+    );
 
-      if (card) {
-        res.status(STATUS_CODES.SUCCESS.OK).send(card);
-      } else {
-        next(new NotFound(MESSAGES.CARD.NOT_FOUND));
-      }
+    if (card) {
+      res.status(STATUS_CODES.SUCCESS.OK).send(card);
+    } else {
+      next(new NotFound(MESSAGES.CARD.NOT_FOUND));
     }
   } catch (err) {
     next(err);
@@ -112,20 +103,16 @@ export const dislikeCard = async (
 ): Promise<void> => {
   try {
     const { cardId } = req.params;
-    if (!mongoose.isValidObjectId(cardId)) {
-      next(new BadRequest(MESSAGES.CARD.INVALID_ID));
+    const userId = (req as RequestWithUser).user._id;
+    const card: ICard | null = await Card.findByIdAndUpdate(
+      cardId,
+      { $pull: { likes: userId } },
+      { new: true },
+    );
+    if (card) {
+      res.status(STATUS_CODES.SUCCESS.OK).send(card);
     } else {
-      const userId = (req as RequestWithUser).user._id;
-      const card: ICard | null = await Card.findByIdAndUpdate(
-        req.params.cardId,
-        { $pull: { likes: userId } },
-        { new: true },
-      );
-      if (card) {
-        res.status(STATUS_CODES.SUCCESS.OK).send(card);
-      } else {
-        next(new NotFound(MESSAGES.CARD.NOT_FOUND));
-      }
+      next(new NotFound(MESSAGES.CARD.NOT_FOUND));
     }
   } catch (err) {
     next(err);

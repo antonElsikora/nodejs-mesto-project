@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
+import { errors } from 'celebrate';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 import errorHandler from './middlewares/error-handler';
@@ -9,6 +10,7 @@ import { login, createUser } from './controllers/users';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import notFound from './middlewares/notFound';
+import { signupValidation, loginValidation } from './validators/authValidation';
 
 loadEnv();
 
@@ -22,8 +24,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(requestLogger);
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', loginValidation, login);
+app.post('/signup', signupValidation, createUser);
 
 app.use(auth);
 app.use('/', usersRouter);
@@ -31,6 +33,7 @@ app.use('/', cardsRouter);
 
 app.use(notFound);
 app.use(errorLogger);
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(PORT, () => {});

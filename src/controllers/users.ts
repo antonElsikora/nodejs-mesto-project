@@ -52,19 +52,15 @@ export const updateAvatar = async (
   const userId = (req as RequestWithUser).user._id;
 
   try {
-    if (!avatar) {
-      next(new BadRequest(MESSAGES.USER.AVATAR_REQUIRED));
+    const user: IUser | null = await User.findByIdAndUpdate(
+      userId,
+      { avatar },
+      { new: true, runValidators: true },
+    );
+    if (user) {
+      res.status(STATUS_CODES.SUCCESS.OK).send(user);
     } else {
-      const user: IUser | null = await User.findByIdAndUpdate(
-        userId,
-        { avatar },
-        { new: true, runValidators: true },
-      );
-      if (user) {
-        res.status(STATUS_CODES.SUCCESS.OK).send(user);
-      } else {
-        next(new NotFound(MESSAGES.USER.NOT_FOUND));
-      }
+      next(new NotFound(MESSAGES.USER.NOT_FOUND));
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
@@ -117,25 +113,21 @@ export const createUser = async (
   const { name, about, avatar, email, password } = req.body;
 
   try {
-    if (!email || !password) {
-      next(new BadRequest(MESSAGES.USER.REQUIRED_CREDENTIALS));
-    } else {
-      const hash = await bcrypt.hash(password, 10);
-      const user: IUser = await User.create({
-        name,
-        about,
-        avatar,
-        email,
-        password: hash,
-      });
-      res.status(STATUS_CODES.SUCCESS.CREATED).send({
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
-        _id: user._id,
-      });
-    }
+    const hash = await bcrypt.hash(password, 10);
+    const user: IUser = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    });
+    res.status(STATUS_CODES.SUCCESS.CREATED).send({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+      _id: user._id,
+    });
   } catch (err) {
     if (err instanceof Error && err.name === 'ValidationError') {
       next(new BadRequest(MESSAGES.USER.INVALID_CREATE));
@@ -155,28 +147,24 @@ export const login = async (
   const { email, password } = req.body;
 
   try {
-    if (!email || !password) {
-      next(new BadRequest(MESSAGES.USER.REQUIRED_CREDENTIALS));
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
     } else {
-      const user = await User.findOne({ email }).select('+password');
-      if (!user) {
+      const matched = await bcrypt.compare(password, user.password);
+      if (!matched) {
         next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
       } else {
-        const matched = await bcrypt.compare(password, user.password);
-        if (!matched) {
-          next(new UnauthorizedError(MESSAGES.USER.INVALID_CREDENTIALS));
-        } else {
-          const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-            expiresIn: '7d',
-          });
-          res
-            .cookie('jwt', token, {
-              httpOnly: true,
-              sameSite: true,
-            })
-            .status(STATUS_CODES.SUCCESS.OK)
-            .send({ message: MESSAGES.USER.LOGIN_SUCCESS });
-        }
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: '7d',
+        });
+        res
+          .cookie('jwt', token, {
+            httpOnly: true,
+            sameSite: true,
+          })
+          .status(STATUS_CODES.SUCCESS.OK)
+          .send({ message: MESSAGES.USER.LOGIN_SUCCESS });
       }
     }
   } catch (err) {
