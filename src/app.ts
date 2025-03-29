@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import { errors } from 'celebrate';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
@@ -22,6 +23,15 @@ mongoose.connect(MONGO_URI).catch(() => {});
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: [
+      'http://mesto.antonsikora.nomoredomains.xyz',
+      'https://mesto.antonsikora.nomoredomains.xyz',
+    ],
+    credentials: true,
+  }),
+);
 app.use(requestLogger);
 
 app.get('/crash-test', () => {
