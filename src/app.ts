@@ -23,12 +23,12 @@ mongoose.connect(MONGO_URI).catch(() => {});
 
 app.use(express.json());
 app.use(cookieParser());
+const corsAllowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:3000'];
 app.use(
   cors({
-    origin: [
-      'http://mesto.antonsikora.nomoredomains.xyz',
-      'https://mesto.antonsikora.nomoredomains.xyz',
-    ],
+    origin: corsAllowedOrigins,
     credentials: true,
   }),
 );
