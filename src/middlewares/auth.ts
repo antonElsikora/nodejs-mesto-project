@@ -7,7 +7,11 @@ import MESSAGES from '../utils/messages';
 const { JWT_SECRET = 'some-secret-key' } = process.env;
 
 const auth = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies.jwt;
+  const cookieToken = req.cookies.jwt;
+  const authHeader = req.headers.authorization;
+  const headerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null;
+  const token = cookieToken || headerToken;
+
   if (!token) {
     next(new UnauthorizedError(MESSAGES.USER.NEED_LOGIN));
   } else {

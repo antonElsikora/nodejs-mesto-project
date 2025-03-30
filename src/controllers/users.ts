@@ -164,7 +164,7 @@ export const login = async (
             sameSite: true,
           })
           .status(STATUS_CODES.SUCCESS.OK)
-          .send({ message: MESSAGES.USER.LOGIN_SUCCESS });
+          .send({ token, message: MESSAGES.USER.LOGIN_SUCCESS });
       }
     }
   } catch (err) {
